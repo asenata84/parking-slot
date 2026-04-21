@@ -1,0 +1,120 @@
+.app-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  padding: 24px 32px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(94, 114, 228, 0.08);
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 2.5vw, 2.5rem);
+}
+
+.header p {
+  margin: 0;
+  line-height: 1.7;
+  color: #4d5872;
+}
+
+.slots-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.slot-card {
+  padding: 22px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slot-card.free {
+  border: 1px solid #a3d4ff;
+}
+
+.slot-card.taken {
+  border: 1px solid #ffbfa9;
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.status-label {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #1653b7;
+  font-size: 0.95rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.slot-card input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d8e1ec;
+  outline: none;
+}
+
+.slot-card button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: white;
+  background: #0d6efd;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.slot-card button:hover {
+  transform: translateY(-1px);
+}
+
+.release-button {
+  background: #e74c3c;
+}
+
+.actions-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.reset-button {
+  padding: 12px 18px;
+  border: none;
+  background: #ff8a00;
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+}
+
+footer {
+  margin-top: 32px;
+  padding: 20px 24px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #4d5872;
+  border: 1px solid #f0f2f7;
+}
