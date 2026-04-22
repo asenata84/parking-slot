@@ -37,7 +37,7 @@ function App() {
   const reserveSlot = slotId => {
     const name = ownerNames[slotId]?.trim();
     if (!name) {
-      window.alert("Моля, въведете име на служител, който заема мястото.");
+      alert("Моля, въведете име на служител");
       return;
     }
 
@@ -58,19 +58,21 @@ function App() {
   };
 
   const resetSlots = () => {
-    if (window.confirm("Наистина ли искате да освободите всички паркоместа?")) {
+    if (confirm("Наистина ли искате да освободите всички места?")) {
       setSlots(defaultSlots);
+      setOwnerNames(
+        defaultSlots.reduce((acc, slot) => ({ ...acc, [slot.id]: "" }), {})
+      );
     }
   };
 
   return (
     <div className="app-shell">
       <header className="header">
-        <h1>Паркоместа за служители</h1>
-        <p>
-          Маркирайте паркомясто, когато паркирате, и го освободете, когато
-          тръгнете. В момента има само 5 служебни места.
-        </p>
+        <div className="header-content">
+          <h1>🅿️ Паркоместа</h1>
+          <p>5 служебни места</p>
+        </div>
       </header>
 
       <main>
@@ -99,8 +101,11 @@ function App() {
                     }
                     placeholder="Име на служител"
                   />
-                  <button onClick={() => reserveSlot(slot.id)}>
-                    Резервирай
+                  <button
+                    className="take-button"
+                    onClick={() => reserveSlot(slot.id)}
+                  >
+                    Заеми
                   </button>
                 </>
               ) : (
@@ -117,18 +122,10 @@ function App() {
 
         <div className="actions-row">
           <button className="reset-button" onClick={resetSlots}>
-            Освободи всички места
+            🔄 Отново всички
           </button>
         </div>
       </main>
-
-      <footer>
-        <p>
-          Това приложение може да се ползва като самостоятелен React проект. За
-          интеграция в Microsoft Teams може да се добави като таб/приставка към
-          вашата Teams среда.
-        </p>
-      </footer>
     </div>
   );
 }
