@@ -40,11 +40,11 @@
 
 .login-input {
   width: 100%;
+  height: 36px;
   padding: 12px 14px;
   border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   font-size: 1rem;
-  margin-bottom: 16px;
   box-sizing: border-box;
   transition: all 0.2s ease;
 }
@@ -67,6 +67,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 44px;
+  margin-top: 15px;
 }
 
 .login-button:active {
@@ -482,5 +483,6 @@
     height: 36px;
     font-size: 14px;
     margin: 0;
+    margin-bottom: 0;
   }
 }

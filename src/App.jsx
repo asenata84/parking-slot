@@ -141,6 +141,38 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const resetSlotsDaily = async () => {
+      const today = new Date().toDateString();
+      const lastReset = localStorage.getItem("lastParkingReset");
+
+      if (lastReset === today) return;
+
+      // reset state locally
+      const reset = defaultSlots;
+
+      setSlots(reset);
+
+      // reset localStorage
+      if (!hasRemote) {
+        saveSlots(reset);
+      }
+
+      // reset Supabase
+      if (hasRemote) {
+        await supabase.from("slots").update({
+          status: "free",
+          user_id: null,
+          user_name: null
+        });
+      }
+
+      localStorage.setItem("lastParkingReset", today);
+    };
+
+    resetSlotsDaily();
+  }, []);
+
   const fetchLatestSlots = async () => {
     if (!hasRemote) return slots;
 
