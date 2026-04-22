@@ -57,15 +57,6 @@ function App() {
     );
   };
 
-  const resetSlots = () => {
-    if (confirm("Наистина ли искате да освободите всички места?")) {
-      setSlots(defaultSlots);
-      setOwnerNames(
-        defaultSlots.reduce((acc, slot) => ({ ...acc, [slot.id]: "" }), {})
-      );
-    }
-  };
-
   return (
     <div className="app-shell">
       <header className="header">
@@ -118,12 +109,6 @@ function App() {
               )}
             </div>
           ))}
-        </div>
-
-        <div className="actions-row">
-          <button className="reset-button" onClick={resetSlots}>
-            🔄 Отново всички
-          </button>
         </div>
       </main>
     </div>
