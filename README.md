@@ -26,17 +26,31 @@ npm run dev
 - Заето място може да се освободи с бутон `Освободи`.
 - Състоянието се запазва локално в браузъра.
 
-### Разполагане в GitHub Pages
+### Разполагане във Vercel
 
-1. Уверете се, че репозиторият е публикуван в GitHub
-2. В настройките на репозиторията активирайте GitHub Pages от branch `gh-pages`
-3. Изпълнете командата за разполагане:
+1. **Свържете GitHub репозиторията с Vercel:**
+   - Отидете на [vercel.com](https://vercel.com)
+   - Свържете вашия GitHub акаунт
+   - Импортирайте `parking-slot` репозиторията
+
+2. **Конфигурирайте разполагането:**
+   - **Framework Preset:** `Other`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm install`
+
+3. **Разположете:**
+   - Vercel автоматично ще разположи приложението при push в `main` branch
+   - Или натиснете "Deploy" ръчно
+
+Приложението ще бъде достъпно на URL като `https://parking-slot.vercel.app/`
+
+### Локално тестване преди разполагане
 
 ```bash
-npm run deploy
+npm run build
+npm run preview
 ```
-
-Приложението ще бъде достъпно на `https://<your-username>.github.io/parking-slot/`
 
 ### Следваща стъпка: Teams интеграция
 
