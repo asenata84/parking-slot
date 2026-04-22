@@ -458,3 +458,29 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Mobile fix */
+@media (max-width: 639px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .name-input {
+    height: 36px;
+    font-size: 14px;
+    margin: 0;
+  }
+}

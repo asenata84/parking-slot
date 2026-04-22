@@ -9,10 +9,12 @@ const PARKING_SLOTS_COUNT = parseInt(
 );
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
 const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
+
 const hasRemote = Boolean(supabase);
 
 const defaultSlots = Array.from(
@@ -20,43 +22,36 @@ const defaultSlots = Array.from(
   (_, index) => ({
     id: index + 1,
     status: "free",
-    userId: null
+    userId: null,
+    userName: null
   })
 );
 
 function normalizeSlots(parsedSlots) {
-  if (!Array.isArray(parsedSlots)) {
-    return defaultSlots;
-  }
+  if (!Array.isArray(parsedSlots)) return defaultSlots;
 
   return defaultSlots.map((slot, index) => {
     const stored = parsedSlots[index];
-    if (!stored) {
-      return slot;
-    }
+    if (!stored) return slot;
 
     return {
       id: slot.id,
       status: stored.status === "taken" ? "taken" : "free",
-      userId: stored.userId || null
+      userId: stored.userId || null,
+      userName: stored.userName || null
     };
   });
 }
 
 function loadSlots() {
-  if (typeof window === "undefined") {
-    return defaultSlots;
-  }
+  if (typeof window === "undefined") return defaultSlots;
 
   try {
     const stored = window.localStorage.getItem("parkingSlots");
-    if (!stored) {
-      return defaultSlots;
-    }
+    if (!stored) return defaultSlots;
 
-    const parsed = JSON.parse(stored);
-    return normalizeSlots(parsed);
-  } catch (error) {
+    return normalizeSlots(JSON.parse(stored));
+  } catch {
     return defaultSlots;
   }
 }
@@ -70,17 +65,27 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [remoteError, setRemoteError] = useState("");
 
   useEffect(() => {
-    if (!hasRemote) {
-      saveSlots(slots);
-    }
+    if (!hasRemote) saveSlots(slots);
   }, [slots]);
 
   useEffect(() => {
-    const fetchLocalOrRemote = async () => {
+    const savedName = localStorage.getItem("parkingUserName");
+    if (savedName) setUserName(savedName);
+  }, []);
+
+  useEffect(() => {
+    if (userName) {
+      localStorage.setItem("parkingUserName", userName);
+    }
+  }, [userName]);
+
+  useEffect(() => {
+    const fetchData = async () => {
       if (!hasRemote) {
         setSlots(loadSlots());
         setIsLoading(false);
@@ -89,7 +94,7 @@ function App() {
 
       const { data, error } = await supabase
         .from("slots")
-        .select("id, status, user_id")
+        .select("id, status, user_id, user_name")
         .order("id", { ascending: true });
 
       if (error) {
@@ -103,55 +108,59 @@ function App() {
         const initialRows = defaultSlots.map(slot => ({
           id: slot.id,
           status: slot.status,
-          user_id: slot.userId
+          user_id: null,
+          user_name: null
         }));
-        const { error: insertError } = await supabase
-          .from("slots")
-          .insert(initialRows);
-        if (insertError) {
-          setRemoteError(insertError.message);
-          setSlots(loadSlots());
-          setIsLoading(false);
-          return;
-        }
+
+        await supabase.from("slots").insert(initialRows);
         setSlots(defaultSlots);
         setIsLoading(false);
         return;
       }
 
       setSlots(
-        defaultSlots.map(slot => {
-          const stored = data.find(row => row.id === slot.id);
-          return stored
-            ? { id: stored.id, status: stored.status, userId: stored.user_id }
-            : slot;
-        })
+        data.map(row => ({
+          id: row.id,
+          status: row.status,
+          userId: row.user_id,
+          userName: row.user_name
+        }))
       );
+
       setIsLoading(false);
     };
 
-    fetchLocalOrRemote();
+    fetchData();
   }, []);
 
   useEffect(() => {
-    const handleStorageChange = event => {
-      if (event.key === "parkingSlots") {
-        setSlots(loadSlots());
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
-  useEffect(() => {
-    // Check if there's an active session
     const sessionUserId = localStorage.getItem("parkingSessionId");
     if (sessionUserId) {
       setUserId(sessionUserId);
       setIsAuthenticated(true);
     }
   }, []);
+
+  const fetchLatestSlots = async () => {
+    if (!hasRemote) return slots;
+
+    const { data, error } = await supabase
+      .from("slots")
+      .select("id, status, user_id, user_name")
+      .order("id", { ascending: true });
+
+    if (error) {
+      alert("Грешка при обновяване");
+      return null;
+    }
+
+    return data.map(row => ({
+      id: row.id,
+      status: row.status,
+      userId: row.user_id,
+      userName: row.user_name
+    }));
+  };
 
   const handleLogin = () => {
     if (password === DEFAULT_PASSWORD) {
@@ -204,52 +213,78 @@ function App() {
 
   const userSlot = slots.find(slot => slot.userId === userId);
 
-  const takeSlot = slotId => {
-    if (userSlot) {
-      alert("Вече имате запазено място. Първо го освободете.");
+  const takeSlot = async slotId => {
+    if (!userName.trim()) {
+      alert("Моля въведете име");
       return;
     }
 
-    const updatedSlots = slots.map(slot =>
-      slot.id === slotId ? { ...slot, status: "taken", userId } : slot
-    );
-    setSlots(updatedSlots);
+    if (userSlot) {
+      alert("Вече имате запазено място.");
+      return;
+    }
+
+    let latestSlots = slots;
+
     if (hasRemote) {
-      supabase
+      const fresh = await fetchLatestSlots();
+      if (!fresh) return;
+      latestSlots = fresh;
+      setSlots(fresh);
+    }
+
+    const target = latestSlots.find(s => s.id === slotId);
+
+    if (!target || target.status === "taken") {
+      alert("Мястото току-що беше заето");
+      return;
+    }
+
+    const updated = latestSlots.map(slot =>
+      slot.id === slotId ? { ...slot, status: "taken", userId, userName } : slot
+    );
+
+    setSlots(updated);
+
+    if (hasRemote) {
+      const { error } = await supabase
         .from("slots")
-        .update({ status: "taken", user_id: userId })
+        .update({
+          status: "taken",
+          user_id: userId,
+          user_name: userName
+        })
         .eq("id", slotId)
-        .then(({ error }) => {
-          if (error) {
-            alert(error.message);
-            setSlots(loadSlots());
-          }
-        });
+        .eq("status", "free");
+
+      if (error) {
+        alert(error.message);
+        setSlots(loadSlots());
+      }
     }
   };
 
-  const releaseSlot = slotId => {
+  const releaseSlot = async slotId => {
     const slot = slots.find(s => s.id === slotId);
+
     if (slot.userId !== userId) {
-      alert("Можете да освободите само място, което сами сте заели");
+      alert("Не е вашето място");
       return;
     }
 
-    const updatedSlots = slots.map(slot =>
-      slot.id === slotId ? { ...slot, status: "free", userId: null } : slot
+    const updated = slots.map(s =>
+      s.id === slotId
+        ? { ...s, status: "free", userId: null, userName: null }
+        : s
     );
-    setSlots(updatedSlots);
+
+    setSlots(updated);
+
     if (hasRemote) {
-      supabase
+      await supabase
         .from("slots")
-        .update({ status: "free", user_id: null })
-        .eq("id", slotId)
-        .then(({ error }) => {
-          if (error) {
-            alert(error.message);
-            setSlots(loadSlots());
-          }
-        });
+        .update({ status: "free", user_id: null, user_name: null })
+        .eq("id", slotId);
     }
   };
 
@@ -259,16 +294,28 @@ function App() {
         <div className="header-content">
           <h1>🅿️ Паркоместа</h1>
           <p>{PARKING_SLOTS_COUNT} служебни места</p>
+          {userName && <p>Здравей, {userName}</p>}
         </div>
-        <button onClick={handleLogout} className="logout-button">
-          Изход
-        </button>
+
+        <div className="header-actions">
+          {!userSlot && (
+            <input
+              type="text"
+              placeholder="Вашето име"
+              value={userName}
+              onChange={e => setUserName(e.target.value)}
+              className="login-input name-input"
+            />
+          )}
+
+          <button onClick={handleLogout} className="logout-button">
+            Изход
+          </button>
+        </div>
       </header>
 
       {remoteError && (
-        <div className="error-banner">
-          Възникна грешка при сървърната връзка: {remoteError}
-        </div>
+        <div className="error-banner">Възникна грешка: {remoteError}</div>
       )}
 
       <main>
@@ -281,6 +328,10 @@ function App() {
                   {slot.status === "free" ? "Свободно" : "Заето"}
                 </span>
               </div>
+
+              {slot.status === "taken" && slot.userName && (
+                <div>👤 {slot.userName}</div>
+              )}
 
               {slot.status === "free" ? (
                 <button
