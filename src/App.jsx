@@ -206,10 +206,39 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const sessionUserId = localStorage.getItem("parkingSessionId");
+
+    // намери мястото на този user
+    const userSlot = slots.find(s => s.userId === sessionUserId);
+
+    // ако има заето място → освободи го
+    if (userSlot) {
+      const updated = slots.map(s =>
+        s.id === userSlot.id
+          ? { ...s, status: "free", userId: null, userName: null }
+          : s
+      );
+
+      setSlots(updated);
+
+      if (hasRemote) {
+        await supabase
+          .from("slots")
+          .update({
+            status: "free",
+            user_id: null,
+            user_name: null
+          })
+          .eq("id", userSlot.id);
+      }
+    }
+
+    // logout UI state
     setIsAuthenticated(false);
     setPassword("");
-    setUserId(null);
+
+    // optional: махаме session
     localStorage.removeItem("parkingSessionId");
   };
 
