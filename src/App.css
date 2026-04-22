@@ -7,6 +7,83 @@
   margin: 0 auto;
 }
 
+/* === Login Page === */
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.3);
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  font-size: 2.2rem;
+}
+
+.login-card p {
+  margin: 0 0 24px;
+  color: #666;
+  font-size: 1rem;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+@media (min-width: 640px) {
+  .login-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+  }
+
+  .login-button:active {
+    transform: translateY(0);
+  }
+}
+
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 24px 16px;
@@ -15,6 +92,68 @@
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
   color: white;
   text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.logout-button {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logout-button:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.96);
+}
+
+@media (min-width: 640px) {
+  .logout-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .logout-button:active {
+    transform: translateY(0);
+  }
+}
+
+.loading-shell,
+.error-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.loading-card {
+  background: white;
+  padding: 24px 32px;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.error-banner {
+  margin: 0 12px 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: #7f1d1d;
+  background: #fee2e2;
 }
 
 .header h1 {
@@ -185,6 +324,15 @@
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
 }
 
+.take-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.take-button:disabled:active {
+  transform: none;
+}
+
 @media (min-width: 640px) {
   .take-button:hover {
     transform: translateY(-2px);
@@ -216,6 +364,13 @@
   .release-button:active {
     transform: translateY(0);
   }
+}
+
+.occupied-button {
+  background: #ccc !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
 .actions-row {
