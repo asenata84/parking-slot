@@ -68,6 +68,8 @@ function App() {
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [remoteError, setRemoteError] = useState("");
+  const [parkingFull, setParkingFull] = useState(false);
+  const [reportedBy, setReportedBy] = useState("");
 
   useEffect(() => {
     if (!hasRemote) saveSlots(slots);
@@ -134,6 +136,36 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Load parking full status
+    const loadParkingStatus = async () => {
+      if (!hasRemote) {
+        const stored = localStorage.getItem("parkingFull");
+        setParkingFull(stored === "true");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("parking_status")
+        .select("is_full, reported_by")
+        .single();
+
+      if (!error && data) {
+        setParkingFull(data.is_full);
+        setReportedBy(data.reported_by || "");
+      } else {
+        // Create initial status if doesn't exist
+        await supabase
+          .from("parking_status")
+          .insert({ is_full: false, reported_by: null });
+        setParkingFull(false);
+        setReportedBy("");
+      }
+    };
+
+    loadParkingStatus();
+  }, []);
+
+  useEffect(() => {
     const sessionUserId = localStorage.getItem("parkingSessionId");
     if (sessionUserId) {
       setUserId(sessionUserId);
@@ -160,6 +192,60 @@ function App() {
       userId: row.user_id,
       userName: row.user_name
     }));
+  };
+
+  const reportParkingFull = async () => {
+    const confirmed = window.confirm(
+      "Сигурни ли сте, че паркингът е пълен? Това ще предупреди всички потребители, че няма свободни места."
+    );
+
+    if (!confirmed) return;
+
+    setParkingFull(true);
+
+    if (!hasRemote) {
+      localStorage.setItem("parkingFull", "true");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("parking_status")
+      .update({ is_full: true, reported_by: userName })
+      .eq("id", 1); // Assuming single row
+
+    if (error) {
+      alert("Грешка при репортване: " + error.message);
+      setParkingFull(false);
+    } else {
+      setReportedBy(userName);
+    }
+  };
+
+  const clearParkingFull = async () => {
+    const confirmed = window.confirm(
+      "Потвърждавате ли, че вече има свободни места на паркинга?"
+    );
+
+    if (!confirmed) return;
+
+    setParkingFull(false);
+
+    if (!hasRemote) {
+      localStorage.removeItem("parkingFull");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("parking_status")
+      .update({ is_full: false, reported_by: null })
+      .eq("id", 1);
+
+    if (error) {
+      alert("Грешка при изчистване: " + error.message);
+      setParkingFull(true);
+    } else {
+      setReportedBy("");
+    }
   };
 
   const handleLogin = () => {
@@ -342,6 +428,29 @@ function App() {
           </button>
         </div>
       </header>
+
+      {parkingFull && (
+        <div className="warning-banner">
+          {reportedBy && (
+            <div className="reported-by">👤 Репортнато от: {reportedBy}</div>
+          )}
+          ⚠️ ПАРКИНГЪТ Е ПЪЛЕН!
+          <br />
+          Въпреки че системата показва свободни места, на паркинга няма такива.
+        </div>
+      )}
+
+      <div className="report-section">
+        {parkingFull ? (
+          <button onClick={clearParkingFull} className="clear-full-button">
+            ✅ Потвърди, че има свободни места
+          </button>
+        ) : (
+          <button onClick={reportParkingFull} className="report-full-button">
+            📢 Потвърди, че няма свободни места
+          </button>
+        )}
+      </div>
 
       {remoteError && (
         <div className="error-banner">Възникна грешка: {remoteError}</div>
